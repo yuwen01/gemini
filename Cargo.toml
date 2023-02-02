@@ -36,21 +36,26 @@ harness = false
 name = "verifier_bench"
 
 [patch.crates-io]
-ark-std = {git = "https://github.com/arkworks-rs/utils"}
-ark-ec = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
-ark-ff = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
-ark-test-curves = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
-ark-serialize = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
-ark-serialize-derive = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
-ark-poly = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
-ark-bls12-381 = {git = "https://github.com/arkworks-rs/curves"}
-ark-relations = {git = "https://github.com/arkworks-rs/snark"}
+# ark-std = {git = "https://github.com/arkworks-rs/utils"}
+# ark-ec = {git = "https://github.com/mmaker/algebra"}
+# ark-ff = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
+# ark-test-curves = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
+# ark-serialize = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
+# ark-serialize-derive = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
+# ark-poly = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
+# ark-bls12-381 = {git = "https://github.com/arkworks-rs/curves"}
+# ark-relations = {git = "https://github.com/arkworks-rs/snark"}
+# ark-circom = {git = "https://github.com/yuwen01/ark-circom", branch = "version_bump", features = ["circom-2"], path = "../ark-circom"}
+ark-circom = {features = ["circom-2"], path = "../ark-circom"}
+# ark-bn254 = {git = "https://github.com/arkworks-rs/curves"}
 
 [dependencies]
-#ark-bls12-381 = "0.4.0"
+# ark-bls12-381 = "0.4.0"
 ark-ec = "0.4.0"
 ark-ff = "0.4.0"
 ark-poly = "0.4.0"
+ark-circom = "0.1.0"
+ark-bn254 = "0.4.0"
 ark-relations = "0.4.0"
 ark-serialize = {version = "0.4.0", features = ["derive"]}
 ark-std ="0.4.0"

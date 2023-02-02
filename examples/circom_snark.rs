@@ -76,6 +76,10 @@ fn time_snark_main(rng: &mut impl Rng, instance_logsize: usize) -> Proof {
     let num_constraints = 1 << instance_logsize;
     let num_variables = 1 << instance_logsize;
 
+    // let circuit = ark_gemini::circuit::random_circuit(rng, num_constraints, num_variables);
+    // let r1cs = ark_gemini::circuit::generate_relation(circuit);
+    // let r1cs = ark_gemini::circuit::dummy_r1cs(rng, num_constraints);
+
     let cfg = CircomConfig::<Bn254>::new(
         "./test-circuits/mycircuit_js/mycircuit.wasm",
         "./test-circuits/mycircuit.r1cs",

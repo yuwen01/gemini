@@ -20,7 +20,6 @@ use crate::subprotocols::sumcheck::time_prover::{TimeProver, Witness};
 use crate::subprotocols::sumcheck::Subclaim;
 use ark_poly::DenseUVPolynomial;
 
-
 #[test]
 fn test_rounds() {
     let rng = &mut ark_std::test_rng();

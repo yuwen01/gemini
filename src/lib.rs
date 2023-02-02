@@ -79,7 +79,6 @@ const SPACE_TIME_THRESHOLD: usize = 22;
 // const SUMCHECK_BUF_SIZE: usize = 1 << 20;
 
 pub mod errors;
-pub mod herring;
 pub mod iterable;
 pub mod kzg;
 pub mod psnark;
