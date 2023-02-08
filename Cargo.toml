@@ -45,8 +45,8 @@ name = "verifier_bench"
 # ark-poly = {git = "https://github.com/mmaker/algebra", branch = "feature/additive-groups"}
 # ark-bls12-381 = {git = "https://github.com/arkworks-rs/curves"}
 # ark-relations = {git = "https://github.com/arkworks-rs/snark"}
-# ark-circom = {git = "https://github.com/yuwen01/ark-circom", branch = "version_bump", features = ["circom-2"], path = "../ark-circom"}
-ark-circom = {features = ["circom-2"], path = "../ark-circom"}
+ark-circom = {git = "https://github.com/yuwen01/ark-circom", branch = "version_bump", features = ["circom-2"]}
+# ark-circom = {features = ["circom-2"], path = "../ark-circom"}
 # ark-bn254 = {git = "https://github.com/arkworks-rs/curves"}
 
 [dependencies]
