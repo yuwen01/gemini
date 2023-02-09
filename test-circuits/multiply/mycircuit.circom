@@ -4,11 +4,7 @@ template Multiplier() {
     signal input a;
     signal input b;
     signal output c;
-    signal i;
-    signal j;
-    i <== b*b;
-    j <== a*b;
-    c <== i*j;
+    c <== a * b;
 }
 
 component main = Multiplier();
