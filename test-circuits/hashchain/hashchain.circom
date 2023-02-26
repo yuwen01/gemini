@@ -4,7 +4,7 @@ include "../../node_modules/circomlib/circuits/poseidon.circom";
 
 template HashChain(n) {
     signal input preimage;
-    signal output result;
+    signal input result;
     signal intermediate[n + 1];
     intermediate[0] <== preimage;
     component hasher[n];
@@ -13,8 +13,8 @@ template HashChain(n) {
         hasher[i].inputs[0] <== intermediate[i];
         intermediate[i+1] <== hasher[i].out;
     }
-    result <== intermediate[n];
+    result === intermediate[n];
 }
 
-component main = HashChain(5);
+component main {public [result]}  = HashChain(5);
 

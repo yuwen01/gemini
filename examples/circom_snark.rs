@@ -81,8 +81,8 @@ fn time_snark_main(rng: &mut impl Rng, instance_logsize: usize) -> Proof {
     // let r1cs = ark_gemini::circuit::dummy_r1cs(rng, num_constraints);
 
     let cfg = CircomConfig::<Bn254>::new(
-        "./test-circuits/mycircuit_js/mycircuit.wasm",
-        "./test-circuits/mycircuit.r1cs",
+        "./test-circuits/hashchain/hashchain_js/hashchain.wasm",
+        "./test-circuits/hashchain/hashchain.r1cs",
     )
     .unwrap();
     let mut builder = CircomBuilder::new(cfg);
