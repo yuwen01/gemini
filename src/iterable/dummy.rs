@@ -1,4 +1,6 @@
 //! Dummy streams used mostly for testing purposes.
+use core::marker::PhantomData;
+
 use ark_ff::{PrimeField, Zero};
 use ark_std::vec::Vec;
 use ark_std::{iter, rand::RngCore};
@@ -26,6 +28,7 @@ pub struct DiagonalMatrixStreamer<T> {
     len: usize,
 }
 
+#[derive(Copy, Clone)]
 pub struct RepeatStreamer<'a, T>
 where
     T: Send + Sync,
@@ -60,6 +63,81 @@ where
     }
 }
 
+#[derive(Copy, Clone)]
+pub struct ConcatStreamer<'a, T>
+where
+    T: Send + Sync,
+{
+    m: &'a Vec<Vec<T>>,
+    phantom: PhantomData<&'a T>,
+}
+
+impl<'a, T> Iterable for ConcatStreamer<'a, T>
+where
+    T: Send + Sync,
+{
+    type Item = &'a T;
+
+    type Iter = ConcatIterator<'a, T>;
+
+    fn iter(&self) -> Self::Iter {
+        Self::Iter {
+            m: self.m,
+            row: 0,
+            col: 0,
+            phantom: PhantomData,
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.m.iter().fold(0, |a, b| a + (*b).len())
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl<'a, T> ConcatStreamer<'a, T>
+where
+    T: Send + Sync,
+{
+    pub fn new(m: &'a Vec<Vec<T>>) -> Self {
+        Self {
+            m,
+            phantom: PhantomData,
+        }
+    }
+}
+
+pub struct ConcatIterator<'a, T> {
+    m: &'a Vec<Vec<T>>,
+    row: usize,
+    col: usize,
+    phantom: PhantomData<&'a T>,
+}
+
+impl<'a, T> Iterator for ConcatIterator<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.row >= self.m.len() {
+            None
+        } else {
+            let cur_row = &self.m[self.row];
+            if self.col >= cur_row.len() {
+                self.col = 0;
+                self.row += 1;
+                self.next()
+            } else {
+                self.col += 1;
+                Some(&cur_row[self.col - 1])
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct RepeatMatrixStreamer<T> {
     m: Vec<T>,
     repeat: usize,

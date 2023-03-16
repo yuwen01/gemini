@@ -178,8 +178,8 @@ impl<E: Pairing> Proof<E> {
     ) -> Proof<E>
     where
         E: Pairing,
-        SM: Iterable + Copy,
-        SZ: Iterable + Copy,
+        SM: Iterable + Clone,
+        SZ: Iterable + Clone,
         SW: Iterable,
         SG: Iterable,
         SM::Item: Borrow<MatrixElement<E::ScalarField>>,
@@ -238,7 +238,7 @@ impl<E: Pairing> Proof<E> {
 
         let second_sumcheck_time = start_timer!(|| "Second sumcheck");
         let second_proof =
-            Sumcheck::new_elastic(&mut transcript, lhs, r1cs.z, E::ScalarField::one());
+            Sumcheck::new_elastic(&mut transcript, lhs, r1cs.z.clone(), E::ScalarField::one());
         end_timer!(second_sumcheck_time);
 
         let batch_challenge = transcript.get_challenge::<E::ScalarField>(b"batch_challenge");

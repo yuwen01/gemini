@@ -1,0 +1,9 @@
+{
+    "name": "gemini",
+    "version": "1.0.0",
+    "dependencies": {
+      "circomlib": "^2.0.1",
+      "circomlibjs": "^0.0.8",
+      "snarkjs": "^0.4.10"
+    }
+}

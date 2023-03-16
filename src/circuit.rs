@@ -1,4 +1,6 @@
 //! This code was blatantly stolen from arkworks test suite.
+use core::str::FromStr;
+
 use ark_ff::{Field, PrimeField};
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
 use ark_relations::{
@@ -11,7 +13,12 @@ use ark_relations::{
 use ark_std::rand::RngCore;
 use ark_std::vec::Vec;
 
-use crate::iterable::dummy::{RepeatMatrixStreamer, RepeatStreamer};
+use ark_bn254::{Bn254, Fr};
+use ark_circom::{CircomBuilder, CircomCircuit, CircomConfig};
+use ark_ec::{bn::Bn, pairing::Pairing};
+use num_bigint::BigInt;
+
+use crate::iterable::dummy::{ConcatStreamer, RepeatMatrixStreamer, RepeatStreamer};
 use crate::iterable::Iterable;
 use crate::misc::MatrixElement;
 
@@ -217,13 +224,83 @@ pub fn matrix_into_rowmaj<F: Field>(a: &[Vec<(F, usize)>]) -> Vec<MatrixElement<
     a_row_flat
 }
 
+pub fn hashchain_split_z<F: PrimeField>(z: Vec<F>, repeats: usize) -> Vec<Vec<F>> {
+    let hash_start = repeats + 2;
+    let len_hash = (z.len() - hash_start) / repeats;
+    let mut result = Vec::new();
+    for i in 0..repeats {
+        let mut cur_hash = vec![F::one()];
+        if i == repeats - 1 {
+            cur_hash.push(z[1]);
+        } else {
+            cur_hash.push(z[3 + i]);
+        }
+        if i == 0 {
+            cur_hash.push(z[2]);
+        } else {
+            cur_hash.push(z[2 + i]);
+        }
+
+        cur_hash.extend(z[hash_start + len_hash * i..hash_start + len_hash * (i + 1)].iter());
+        result.push(cur_hash);
+    }
+    result
+}
+
 pub fn repeat_r1cs<'a, F: PrimeField>(
+    r1cs: &'a R1cs<F>,
+    repeat: usize,
+    z_components: &'a Vec<Vec<F>>, // the big one
+    [z_a, z_b, z_c]: [ConcatStreamer<'a, F>; 3],
+) -> R1csStream<
+    RepeatMatrixStreamer<MatrixElement<F>>,
+    ConcatStreamer<'a, F>,
+    impl Iterable<Item = &'a F> + 'a,
+> {
+    // XXX. change this
+    let nonzero = 0;
+    let block_size = 0;
+    let joint_len = 0;
+
+    let a_colm = RepeatMatrixStreamer::new(matrix_into_rowmaj(&r1cs.a), repeat, block_size);
+    let b_colm = RepeatMatrixStreamer::new(matrix_into_rowmaj(&r1cs.b), repeat, block_size);
+    let c_colm = RepeatMatrixStreamer::new(matrix_into_rowmaj(&r1cs.c), repeat, block_size);
+
+    let col_number = a_colm.len();
+    let a_rowm =
+        RepeatMatrixStreamer::new(matrix_into_colmaj(&r1cs.a, col_number), repeat, block_size);
+    let b_rowm =
+        RepeatMatrixStreamer::new(matrix_into_colmaj(&r1cs.b, col_number), repeat, block_size);
+    let c_rowm =
+        RepeatMatrixStreamer::new(matrix_into_colmaj(&r1cs.c, col_number), repeat, block_size);
+    let witness = RepeatStreamer::new(&r1cs.w, repeat);
+    let z_streamer = ConcatStreamer::new(z_components);
+
+    R1csStream {
+        a_rowmaj: a_colm,
+        b_rowmaj: b_colm,
+        a_colmaj: a_rowm,
+        b_colmaj: b_rowm,
+        c_colmaj: c_rowm,
+        c_rowmaj: c_colm,
+        z: z_streamer,
+        witness,
+        z_a,
+        z_b,
+        z_c,
+        nonzero,
+        joint_len,
+    }
+}
+
+pub fn repeat_r1cs_and_z<'a, F: PrimeField>(
     r1cs: &'a R1cs<F>,
     repeat: usize,
     [z_a, z_b, z_c]: [&'a [F]; 3],
 ) -> R1csStream<
-    impl Iterable<Item = MatrixElement<F>>,
-    impl Iterable<Item = &'a F> + 'a,
+    RepeatMatrixStreamer<MatrixElement<F>>,
+    RepeatStreamer<'a, F>,
+    // impl Iterable<Item = &'a F> + 'a,
     impl Iterable<Item = &'a F> + 'a,
 > {
     // XXX. change this
@@ -319,7 +396,7 @@ fn test_repeated_r1cs() {
     let za = product_matrix_vector(&r1cs.a, &r1cs.z);
     let zb = product_matrix_vector(&r1cs.b, &r1cs.z);
     let zc = product_matrix_vector(&r1cs.c, &r1cs.z);
-    let repeated_r1cs = repeat_r1cs(&r1cs, repeat, [&za, &zb, &zc]);
+    let repeated_r1cs = repeat_r1cs_and_z(&r1cs, repeat, [&za, &zb, &zc]);
 
     // test that <z_a, z_b> = z_c(1)
     assert_eq!(ip(&za, &zb), evaluate_be(zc.iter(), &Fr::one()));
@@ -362,4 +439,20 @@ pub fn dummy_r1cs<F: Field>(rng: &mut impl RngCore, n: usize) -> R1cs<F> {
         w,
         x,
     }
+}
+
+pub fn r1cs_from_circom(
+    r1cs_path: &str,
+    witness_path: &str,
+    hash_input: &str,
+) -> R1cs<<Bn<ark_bn254::Config> as Pairing>::ScalarField> {
+    let hashchain_cfg = CircomConfig::<Bn254>::new(witness_path, r1cs_path).unwrap();
+    let mut hashchain_builder = CircomBuilder::new(hashchain_cfg);
+    // todo add json parser, seems p cash money idk
+    hashchain_builder.push_input("preimage", BigInt::from_str(hash_input).unwrap());
+    let hashchain_circom = hashchain_builder.build().unwrap();
+    generate_relation::<
+        <Bn<ark_bn254::Config> as Pairing>::ScalarField,
+        CircomCircuit<Bn<ark_bn254::Config>>,
+    >(hashchain_circom)
 }

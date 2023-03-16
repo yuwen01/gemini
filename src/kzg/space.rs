@@ -171,6 +171,7 @@ where
         SF: Iterable,
         SF::Item: Borrow<E::ScalarField>,
     {
+        println!("{}", polynomial.len());
         assert!(self.powers_of_g.len() >= polynomial.len());
 
         Commitment(msm_chunks(&self.powers_of_g, polynomial))
